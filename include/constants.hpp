@@ -1,7 +1,7 @@
 namespace clr{
-constexpr unsigned int S0 = 7;
-constexpr unsigned int S1 = 8;
-constexpr unsigned int S2 = 11;
-constexpr unsigned int S3 = 12;
-constexpr unsigned int S_Out = 13;
+constexpr int S0 = A0;
+constexpr int S1 = A1;
+constexpr int S2 = A2;
+constexpr int S3 = A3;
+constexpr unsigned int S_Out = 12;
 }
