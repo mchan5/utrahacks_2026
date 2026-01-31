@@ -1,18 +1,22 @@
 #include <Arduino.h>
+#include <Servo.h>
 
-// put function declarations here:
-int myFunction(int, int);
+Servo servo;
+
+constexpr int SERVO_PIN = 6;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+    servo.attach(SERVO_PIN);
+    servo.write(90); 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
+    servo.write(0);
+    delay(1000);
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+    servo.write(90);
+    delay(1000);
+
+    servo.write(180);
+    delay(1000);
 }
