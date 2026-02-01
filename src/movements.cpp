@@ -1,5 +1,6 @@
 #include "movements.h"
 #include "constants.hpp"
+#include "Arduino.h"
 
 // define drivetrain ONCE
 L298NX2 drivetrain(
@@ -9,28 +10,25 @@ L298NX2 drivetrain(
 
 void moveForward(int duration)
 {
-  drivetrain.setSpeedA(255);
-  drivetrain.setSpeedB(255);
-  drivetrain.forwardFor(duration);
-Serial.println("T)");
-
-
+    drivetrain.setSpeedA(1000);
+    drivetrain.setSpeedB(1000);
+    drivetrain.forwardFor(duration);
 }
 
 void turnLeft(int duration)
 {
-  drivetrain.setSpeedA(150);
-  drivetrain.setSpeedB(150);
-  drivetrain.backwardForA(duration);
-  drivetrain.forwardForB(duration);
+    drivetrain.setSpeedA(-1000);
+    drivetrain.setSpeedB(1000);
+
+    drivetrain.forwardFor(duration);
+
 }
 
 void turnRight(int duration)
 {
-  drivetrain.setSpeedA(150);
-  drivetrain.setSpeedB(150);
-  drivetrain.forwardForA(duration);
-  drivetrain.backwardForB(duration);
+    drivetrain.setSpeedA(1000);
+    drivetrain.setSpeedB(-1000);
+    drivetrain.forwardFor(duration);
 }
 
 void elevateBox(Servo &myServo)

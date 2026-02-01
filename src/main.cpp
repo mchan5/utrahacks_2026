@@ -47,3 +47,23 @@ void loop()
   delay(500);
   Serial.println("DONE");
 }
+
+
+// #include <Arduino.h>
+// #include "constants.hpp"
+
+// void setup() {
+//   Serial.begin(9600);
+//   delay(2000);
+//   Serial.println("RAW MOTOR TEST");
+
+//   pinMode(dt::EN_A, OUTPUT);
+//   pinMode(dt::IN1_A, OUTPUT);
+//   pinMode(dt::IN2_A, OUTPUT);
+
+//   digitalWrite(dt::IN1_A, HIGH);
+//   digitalWrite(dt::IN2_A, LOW);
+//   analogWrite(dt::EN_A, 255);
+// }
+
+// void loop() {}
