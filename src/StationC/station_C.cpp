@@ -7,5 +7,7 @@
 #include "movements.h"
 
 void runStationC() {
-  // TODO: Implement Station C task sequence
+  moveForward(1000);
+  turnLeft(500);
 }
+

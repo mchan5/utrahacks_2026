@@ -1,46 +1,323 @@
+# Color Sensor Library (TCS3200)
 
-This directory is intended for project specific (private) libraries.
-PlatformIO will compile them to static libraries and link into the executable file.
+This library provides easy-to-use functions for reading colors with the TCS3200 RGB color sensor. The sensor works by shining light on an object and measuring how much red, green, and blue light reflects back.
 
-The source code of each library should be placed in a separate directory
-("lib/your_library_name/[Code]").
+## What This Library Does
 
-For example, see the structure of the following example libraries `Foo` and `Bar`:
+- Reads red, green, and blue light levels
+- Identifies common colors (red, green, blue, white, black)
+- Calibrates automatically to work in different lighting conditions
+- Provides both raw sensor values and easy-to-use 0-1 scale values
 
-|--lib
-|  |
-|  |--Bar
-|  |  |--docs
-|  |  |--examples
-|  |  |--src
-|  |     |- Bar.c
-|  |     |- Bar.h
-|  |  |- library.json (optional. for custom build options, etc) https://docs.platformio.org/page/librarymanager/config.html
-|  |
-|  |--Foo
-|  |  |- Foo.c
-|  |  |- Foo.h
-|  |
-|  |- README --> THIS FILE
-|
-|- platformio.ini
-|--src
-   |- main.c
+## Hardware Setup
 
-Example contents of `src/main.c` using Foo and Bar:
+### TCS3200 Sensor Wiring
+
+Connect your sensor to the Arduino like this:
+
 ```
-#include <Foo.h>
-#include <Bar.h>
+TCS3200    →    Arduino
+VCC        →    5V
+GND        →    GND
+S2         →    Digital pin (your choice)
+S3         →    Digital pin (your choice)
+OUT        →    Digital pin with interrupt support (2, 3, etc.)
+```
 
-int main (void)
-{
-  ...
+**Important**: The OUT pin must support interrupts. On most Arduinos, use pin 2 or 3.
+
+## Quick Start Example
+
+Here's a complete example to get you started:
+
+```cpp
+#include <Arduino.h>
+#include "ColorSensor.h"
+
+// Create sensor with pins: S2=7, S3=8, OUT=2
+ColorSensor colorSensor(7, 8, 2);
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Start the sensor
+  colorSensor.begin();
+  
+  // Calibrate (follow instructions in Serial Monitor)
+  colorSensor.calibrateSerial();
+  
+  Serial.println("Ready to detect colors!");
 }
 
+void loop() {
+  // Read color values (0.0 to 1.0)
+  ColorRGB color = colorSensor.readNormalized();
+  
+  // Figure out what color it is
+  ColorName detected = colorSensor.classify(color);
+  
+  // Print the color name
+  Serial.print("Color detected: ");
+  Serial.println(toString(detected));
+  
+  // Print the RGB values
+  Serial.print("RGB: ");
+  Serial.print(color.r);
+  Serial.print(", ");
+  Serial.print(color.g);
+  Serial.print(", ");
+  Serial.println(color.b);
+  
+  delay(500);  // Wait half a second before reading again
+}
 ```
 
-The PlatformIO Library Dependency Finder will find automatically dependent
-libraries by scanning project source files.
+## Step-by-Step Usage
 
-More information about PlatformIO Library Dependency Finder
-- https://docs.platformio.org/page/librarymanager/ldf.html
+### 1. Create the Sensor Object
+
+```cpp
+ColorSensor colorSensor(s2Pin, s3Pin, outPin);
+```
+
+Replace `s2Pin`, `s3Pin`, and `outPin` with your actual pin numbers.
+
+### 2. Initialize in setup()
+
+```cpp
+void setup() {
+  Serial.begin(115200);  // Start serial communication
+  colorSensor.begin();   // Start the sensor
+}
+```
+
+### 3. Calibrate the Sensor
+
+**Why calibrate?** Lighting conditions vary. Calibration teaches the sensor what "dark" and "bright" look like in your environment.
+
+```cpp
+colorSensor.calibrateSerial();
+```
+
+**How to calibrate:**
+1. Open Serial Monitor (Tools → Serial Monitor)
+2. When prompted, place a BLACK object under the sensor
+3. Press any key in Serial Monitor
+4. When prompted, place a WHITE object under the sensor
+5. Press any key in Serial Monitor
+6. Calibration complete!
+
+**Tip**: Use the same black/white objects each time for consistent results.
+
+### 4. Read Colors
+
+**Option A: Get color values (0.0 to 1.0 scale)**
+
+```cpp
+ColorRGB color = colorSensor.readNormalized();
+// color.r = red (0.0 = no red, 1.0 = maximum red)
+// color.g = green
+// color.b = blue
+```
+
+**Option B: Get raw sensor readings**
+
+```cpp
+unsigned long rgb[3];
+colorSensor.readRaw(rgb);
+// rgb[0] = red frequency
+// rgb[1] = green frequency
+// rgb[2] = blue frequency
+```
+
+### 5. Identify Colors
+
+```cpp
+ColorRGB color = colorSensor.readNormalized();
+ColorName detected = colorSensor.classify(color);
+
+if (detected == ColorName::RED) {
+  Serial.println("It's red!");
+} else if (detected == ColorName::BLUE) {
+  Serial.println("It's blue!");
+}
+```
+
+**Available colors:**
+- `ColorName::RED`
+- `ColorName::GREEN`
+- `ColorName::BLUE`
+- `ColorName::WHITE`
+- `ColorName::BLACK`
+- `ColorName::UNKNOWN`
+
+### 6. Convert Color to Text
+
+```cpp
+ColorName detected = colorSensor.classify(color);
+Serial.println(toString(detected));  // Prints "RED", "BLUE", etc.
+```
+
+## Common Use Cases
+
+### Example 1: Simple Color Detector
+
+```cpp
+void loop() {
+  ColorRGB color = colorSensor.readNormalized();
+  ColorName detected = colorSensor.classify(color);
+  
+  Serial.print("Detected: ");
+  Serial.println(toString(detected));
+  
+  delay(500);
+}
+```
+
+### Example 2: Stop at Red Line
+
+```cpp
+void loop() {
+  ColorRGB color = colorSensor.readNormalized();
+  
+  if (colorSensor.classify(color) == ColorName::RED) {
+    stopRobot();
+    Serial.println("Red line detected! Stopping.");
+  } else {
+    moveForward();
+  }
+}
+```
+
+### Example 3: Sort by Color
+
+```cpp
+void sortObject() {
+  ColorRGB color = colorSensor.readNormalized();
+  ColorName detected = colorSensor.classify(color);
+  
+  switch(detected) {
+    case ColorName::RED:
+      turnToRedBin();
+      break;
+    case ColorName::BLUE:
+      turnToBlueBin();
+      break;
+    case ColorName::GREEN:
+      turnToGreenBin();
+      break;
+    default:
+      Serial.println("Unknown color - skipping");
+  }
+}
+```
+
+## Troubleshooting
+
+### Colors Not Detected Correctly
+
+1. **Recalibrate**: Different lighting = different readings
+2. **Adjust sensor distance**: Place sensor 1-3cm from the object
+3. **Check wiring**: Make sure all connections are secure
+4. **Try dark room**: Ambient light can interfere
+
+### Sensor Gives UNKNOWN for Everything
+
+- Check that you've calibrated first: `colorSensor.calibrateSerial()`
+- Check calibration status: `if (colorSensor.isCalibrated()) { ... }`
+- Use good black/white references (not gray!)
+
+### Readings Are Jumpy/Unstable
+
+- Increase delay between readings: `delay(100)` or more
+- Make sure sensor and object aren't moving
+- Shield sensor from ambient light
+- Check power supply (needs stable 5V)
+
+### Can't Distinguish Similar Colors
+
+The sensor works best with distinct colors (red vs blue). Similar colors (orange vs red) are harder to tell apart. You may need to:
+- Adjust threshold values in `ColorSensor.cpp` (see comments in classify function)
+- Use custom logic instead of the classify() function
+- Check specific RGB values rather than using color names
+
+## Advanced: Custom Color Detection
+
+If the built-in colors aren't enough, you can check RGB values directly:
+
+```cpp
+ColorRGB color = colorSensor.readNormalized();
+
+// Detect orange (high red, medium green, low blue)
+if (color.r > 0.5 && color.g > 0.2 && color.g < 0.5 && color.b < 0.2) {
+  Serial.println("Orange detected!");
+}
+
+// Detect yellow (high red and green, low blue)
+if (color.r > 0.4 && color.g > 0.4 && color.b < 0.2) {
+  Serial.println("Yellow detected!");
+}
+```
+
+## Tips for Best Results
+
+1. **Consistent lighting**: Calibrate in the same lighting you'll use
+2. **Sensor distance**: Keep sensor 1-3cm from objects
+3. **Matte surfaces**: Shiny objects can give inconsistent readings
+4. **Shield from light**: Block external light sources when possible
+5. **Test thoroughly**: Test with actual objects you'll use in your project
+
+## Function Reference
+
+### Constructor
+```cpp
+ColorSensor(s2Pin, s3Pin, outPin)
+```
+Creates a new sensor object with specified pins.
+
+### begin()
+```cpp
+colorSensor.begin()
+```
+Initializes the sensor. Call once in setup().
+
+### calibrateSerial()
+```cpp
+colorSensor.calibrateSerial()
+```
+Interactive calibration using Serial Monitor.
+
+### isCalibrated()
+```cpp
+bool calibrated = colorSensor.isCalibrated()
+```
+Returns true if sensor has been calibrated.
+
+### readNormalized()
+```cpp
+ColorRGB color = colorSensor.readNormalized()
+```
+Returns RGB values from 0.0 to 1.0.
+
+### readRaw()
+```cpp
+unsigned long rgb[3];
+colorSensor.readRaw(rgb)
+```
+Returns raw frequency values.
+
+### classify()
+```cpp
+ColorName name = colorSensor.classify(color)
+```
+Identifies the color and returns a ColorName.
+
+### toString()
+```cpp
+const char* text = toString(colorName)
+```
+Converts ColorName to printable text.
+
+## Questions?
+
+Check the comments in `ColorSensor.cpp` for detailed explanations of how the code works, including how to adjust timing and threshold values.

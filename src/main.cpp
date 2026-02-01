@@ -29,6 +29,7 @@
 
 #include "StationA/Station_A.h"
 #include "StationB/Station_B.h"
+#include "StationC/Station_C.h"
 #include "StationTest/Station_Test.h"
 #include "robot_mode.h"
 
