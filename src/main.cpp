@@ -7,7 +7,6 @@
 #include "StationA/Station_A.h"
 #include "StationB/Station_B.h"
 #include "robot_mode.h"
-#include "mode_select.h"
 
 #include <Arduino.h>
 #include "robot_mode.h"
