@@ -1,22 +1,58 @@
 #include <Arduino.h>
-#include <Servo.h>
 
-Servo servo;
+// Pin Definitions
+#define S0 4
+#define S1 5
+#define S2 6
+#define S3 7
+#define sensorOut 8
 
-constexpr int SERVO_PIN = 6;
+// Variables to store frequency
+int redFrequency = 0;
+int greenFrequency = 0;
+int blueFrequency = 0;
 
 void setup() {
-    servo.attach(SERVO_PIN);
-    servo.write(90); 
+  // Setting the outputs
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  
+  // Setting sensorOut as an input
+  pinMode(sensorOut, INPUT);
+  
+  // Setting frequency scaling to 20%
+  digitalWrite(S0, HIGH);
+  digitalWrite(S1, LOW);
+  
+  Serial.begin(115200);
+  Serial.println("TCS3200 Color Sensor Initialized...");
 }
 
 void loop() {
-    servo.write(0);
-    delay(1000);
+  // 1. Read Red Photodiodes
+  digitalWrite(S2, LOW);
+  digitalWrite(S3, LOW);
+  redFrequency = pulseIn(sensorOut, LOW);
+  
+  // 2. Read Green Photodiodes
+  digitalWrite(S2, HIGH);
+  digitalWrite(S3, HIGH);
+  greenFrequency = pulseIn(sensorOut, LOW);
+  
+  // 3. Read Blue Photodiodes
+  digitalWrite(S2, LOW);
+  digitalWrite(S3, HIGH);
+  blueFrequency = pulseIn(sensorOut, LOW);
 
-    servo.write(90);
-    delay(1000);
+  // Print results to Serial Monitor
+  Serial.print(" R= ");
+  Serial.print(redFrequency);
+  Serial.print(" G= ");
+  Serial.print(greenFrequency);
+  Serial.print(" B= ");
+  Serial.println(blueFrequency);
 
-    servo.write(180);
-    delay(1000);
+  delay(500);
 }
